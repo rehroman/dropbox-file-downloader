@@ -1,3 +1,4 @@
+#to get the api token https://dropbox.github.io/dropbox-api-v2-explorer/#files_list_folder
 import requests
 import json
 import argparse
@@ -21,8 +22,10 @@ def main(args):
     }
 
     # Parameters for list folder request
+    if args.folder == None:
+        args.folder = ""
     list_folder_params = {
-        "path": "",
+        "path": str(args.folder),
         "shared_link": {"url": shared_link}
     }
 
@@ -37,26 +40,33 @@ def main(args):
     entries = data.get("entries", [])
 
     if len(entries) > 0:
-        total_files = len(entries) if args.count is None else min(len(entries), args.count)
+        total_files = len(entries) #if args.count is None else min(len(entries), args.count)
         print(f"Total files to download: {total_files}")
 
         for i, file_info in enumerate(entries):
-            if args.count is not None and i >= args.count:
-                break
-
+            # if args.count is not None and i >= args.count:
+            #     break
+            file_type = file_info[".tag"]
             file_name = file_info["name"]
             download_path = os.path.join(args.download_folder, file_name)
 
             # Check if the file already exists
-            if os.path.exists(download_path):
-                print(f"File {i+1} of {total_files}: {file_name} already exists, skipping.")
-                continue
-
+            # if os.path.exists(download_path):
+            #     print(f"File {i+1} of {total_files}: {file_name} already exists, skipping.")
+            #     continue
+            
+            if file_type == 'folder':
+                print('---Nested folder---')
+                nested_folders = args.download_folder+'/'+file_name
+                if not os.path.exists(nested_folders):
+                    os.makedirs(nested_folders)
+                folder_name_for_query = args.folder+'/'+file_name
+                main(argparse.Namespace(verbose = 0, token = access_token, url=shared_link, folder=folder_name_for_query, download_folder=nested_folders))
             print(f"Downloading file {i+1} of {total_files}: {file_name}...")
 
             # Parameters for get shared link file request
             get_shared_link_file_params = {
-                "path": f"/{file_name}",
+                "path": args.folder + f"/{file_name}",
                 "url": shared_link
             }
 
@@ -67,9 +77,11 @@ def main(args):
 
             response = requests.post(get_shared_link_file_url, headers=headers)
             content = response.content
-
-            with open(download_path, "wb") as f:
-                f.write(content)
+            if file_type == 'folder':
+                pass
+            else: 
+                with open(download_path, "wb") as f:
+                    f.write(content)
 
             print(f"Download complete. File saved as: {download_path}")
     else:
@@ -83,11 +95,12 @@ if __name__ == "__main__":
     # Adding arguments
     parser.add_argument('-t', '--token', type=str, required=True, help='Access token for Dropbox API.')
     parser.add_argument('-url', type=str, required=True, help='Shared Dropbox folder link.')
-    parser.add_argument('-df', '--download_folder', default='downloads', help='Download folder. Default is "downloads".')
+    parser.add_argument('-df', '--destination_folder', default='dropbox_download', help='Download to the selected destination folder. Default is "dropbox_download".')
+    parser.add_argument('-f', "--folder", type=str, required=False, help='Remote folder to download, useful for recursive calls to nested folders. e.g., if folder name is "Name" insert "/Name"')
     parser.add_argument('-c', '--count', type=int, help='Number of files to download. If not provided, all files will be downloaded.')
     parser.add_argument("--h", action="help", help="Show all listed options with a brief English description.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose mode to print the full API response.")
-
+    
     # Parsing arguments
     args = parser.parse_args()
 
