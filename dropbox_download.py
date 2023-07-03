@@ -61,7 +61,7 @@ def main(args):
                 if not os.path.exists(nested_folders):
                     os.makedirs(nested_folders)
                 folder_name_for_query = args.folder+'/'+file_name
-                main(argparse.Namespace(verbose = 0, token = access_token, url=shared_link, folder=folder_name_for_query, download_folder=nested_folders))
+                main(argparse.Namespace(verbose = 0, token = access_token, url=shared_link, folder=folder_name_for_query, count = None, download_folder=nested_folders))
             print(f"Downloading file {i+1} of {total_files}: {file_name}...")
 
             # Parameters for get shared link file request
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     # Adding arguments
     parser.add_argument('-t', '--token', type=str, required=True, help='Access token for Dropbox API.')
     parser.add_argument('-url', type=str, required=True, help='Shared Dropbox folder link.')
-    parser.add_argument('-df', '--destination_folder', default='dropbox_download', help='Download to the selected destination folder. Default is "dropbox_download".')
+    parser.add_argument('-df', '--download_folder', default='dropbox_download', help='Download to the selected destination folder. Default is "dropbox_download".')
     parser.add_argument('-f', "--folder", type=str, required=False, help='Remote folder to download, useful for recursive calls to nested folders. e.g., if folder name is "Name" insert "/Name"')
     parser.add_argument('-c', '--count', type=int, help='Number of files to download. If not provided, all files will be downloaded.')
     parser.add_argument("--h", action="help", help="Show all listed options with a brief English description.")
