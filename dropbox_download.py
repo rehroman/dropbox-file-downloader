@@ -40,12 +40,12 @@ def main(args):
     entries = data.get("entries", [])
 
     if len(entries) > 0:
-        total_files = len(entries) #if args.count is None else min(len(entries), args.count)
+        total_files = len(entries) if args.count is None else min(len(entries), args.count)
         print(f"Total files to download: {total_files}")
 
         for i, file_info in enumerate(entries):
-            # if args.count is not None and i >= args.count:
-            #     break
+            if args.count is not None and i >= args.count:
+                break
             file_type = file_info[".tag"]
             file_name = file_info["name"]
             download_path = os.path.join(args.download_folder, file_name)
